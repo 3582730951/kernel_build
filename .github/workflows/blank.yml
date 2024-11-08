@@ -20,7 +20,33 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y build-essential bc bison flex libssl-dev libncurses5-dev curl
+          sudo apt install -y \
+            build-essential \
+            bc \
+            bison \
+            flex \
+            libssl-dev \
+            libncurses5-dev \
+            curl \
+            libelf-dev \
+            ccache \
+            git-core \
+            gnupg2 \
+            wget \
+            python3 \
+            rsync \
+            zip \
+            device-tree-compiler \
+            gcc-aarch64-linux-gnu \
+            clang-14 \
+            lld-14 \
+            llvm-14 \
+            liblz4-dev \
+            libzstd-dev \
+            libxml2-utils \
+            make \
+            libudev-dev \
+            libpci-dev
 
       - name: Download Google common kernel source
         run: |

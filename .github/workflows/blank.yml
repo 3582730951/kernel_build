@@ -1,0 +1,52 @@
+name: Build Redmi K60 Pro GKI Kernel
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential bc bison flex libssl-dev libncurses5-dev curl
+
+      - name: Download Google common kernel source
+        run: |
+          # 下载 Google 的通用内核源码
+          git clone https://android.googlesource.com/kernel/common.git
+          cd common
+          git checkout 3ca6a2912c7e
+
+      - name: Set up cross-compilation toolchain for arm64
+        run: |
+          # 安装用于 arm64 的交叉编译工具链
+          sudo apt install -y gcc-aarch64-linux-gnu
+
+      - name: Configure the kernel with gki_defconfig
+        run: |
+          cd common
+          # 使用 gki_defconfig 配置内核
+          ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make gki_defconfig
+
+      - name: Build the kernel
+        run: |
+          cd common
+          # 使用并行编译加快速度
+          ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make -j$(nproc)
+
+      - name: Upload kernel build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: redmi-k60pro-gki-kernel
+          path: common/arch/arm64/boot/Image

@@ -46,7 +46,8 @@ jobs:
             libxml2-utils \
             make \
             libudev-dev \
-            libpci-dev
+            libpci-dev \
+            dwarves  # 安装 pahole 工具
 
       - name: Download Google common kernel source
         run: |

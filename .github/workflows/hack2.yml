@@ -1,4 +1,4 @@
-name: Build Kernel using Bazel (Kleaf)
+name: Build Kernel with Bazel
 
 on:
   push:
@@ -48,35 +48,36 @@ jobs:
             libudev-dev \
             libpci-dev \
             dwarves \
-            python3-pip \
-            unzip \
-            libcurl4-openssl-dev
+            apt-transport-https \
+            curl \
+            gnupg
 
-      - name: Checkout MiLinuxKernel_4 repository
+      - name: Add Bazel APT repository and install Bazel
         run: |
-          git clone https://github.com/3582730951/MiLinuxKernel_4.git --branch MiEngine_1
-          cd MiLinuxKernel_4
-
-      - name: Download and extract clang toolchain
-        run: |
-          wget https://github.com/3582730951/MiLinuxKernel_4/releases/download/1/clang-r450784e-main.zip
-          unzip clang-r450784e-main.zip
-          # 添加 clang 工具链到路径
-          export PATH=$PWD/clang-r450784e-main/bin:$PATH
-          export CROSS_COMPILE=aarch64-linux-gnu-
-          export CC=clang
-          export CXX=clang++
-
-      - name: Install Bazel
-        run: |
-          sudo apt install apt-transport-https curl gnupg
           curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor >bazel-archive-keyring.gpg
           sudo mv bazel-archive-keyring.gpg /usr/share/keyrings
-          sudo apt update && sudo apt install bazel-5.0.0
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/bazel-archive-keyring.gpg] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
+          sudo apt update && sudo apt install -y bazel
           sudo apt update && sudo apt full-upgrade
-          sudo apt install bazel
 
-      - name: Build the kernel using Bazel
+      - name: Download and extract clang
+        run: |
+          wget https://github.com/3582730951/MiLinuxKernel_4/releases/download/1/clang-r450784e-main.zip -O clang-r450784e-main.zip
+          unzip clang-r450784e-main.zip -d clang
+
+      - name: Set up Clang environment
+        run: |
+          export PATH=$PWD/clang/bin:$PATH
+          export CC=$PWD/clang/bin/clang
+          export CXX=$PWD/clang/bin/clang++
+          export LLVM=1
+
+      - name: Clone the kernel source
+        run: |
+          git clone --branch MiEngine_1 https://github.com/3582730951/MiLinuxKernel_4.git
+          cd MiLinuxKernel_4
+
+      - name: Build the kernel with Bazel
         run: |
           chmod -R 777 MiLinuxKernel_4
           cd MiLinuxKernel_4
@@ -85,5 +86,5 @@ jobs:
       - name: Upload kernel build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: mi-linux-kernel-boot-files
-          path: MiLinuxKernel_4/common/arch/arm64/boot/**
+          name: kernel-artifacts
+          path: MiLinuxKernel_4/common/arch/arm64/boot/*

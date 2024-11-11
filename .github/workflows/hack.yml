@@ -14,9 +14,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout the repository
       - name: Checkout the repository
         uses: actions/checkout@v3
 
+      # 2. Install dependencies
       - name: Install dependencies
         run: |
           sudo apt update
@@ -49,6 +51,7 @@ jobs:
             libpci-dev \
             dwarves  # 安装 pahole 工具
 
+      # 3. Clone MiLinuxKernel_4 repository
       - name: Clone MiLinuxKernel_4 repository
         run: |
           git clone https://$GH_TOKEN@github.com/3582730951/MiLinuxKernel_4.git
@@ -57,26 +60,60 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}  # 使用 Secret 中存储的 Token
 
-          
+      # 4. Clone and checkout the build repo for ABI files
+      - name: Clone Android build repository for ABI
+        run: |
+          git clone https://android.googlesource.com/kernel/build.git
+          cd build
+          git checkout refs/heads/main-16k-common-android14-5.15
 
-      - name: Set up cross-compilation toolchain for arm64
+      # 5. Clone and update required repositories for libabigail and elfutils
+      - name: Clone and update libabigail and elfutils
+        run: |
+          git clone git://sourceware.org/git/libabigail.git
+          git clone git://sourceware.org/git/elfutils.git
+          cd libabigail
+          git checkout mm-next
+          cd ../elfutils
+          git checkout mm-next
+
+      # 6. Build ABI files and update ABI configuration
+      - name: Build ABI and update ABI configuration
+        run: |
+          cd build
+          BUILD_CONFIG=common/build.config.gki.aarch64 build/build_abi.sh --update --print-report
+
+      # 7. Copy the updated ABI file to the kernel repository
+      - name: Update ABI file in kernel repository
+        run: |
+          cp build/out_abi/android11-5.4/dist/abi.xml ../MiLinuxKernel_4/common/abi_gki_aarch64.xml
+
+      # 8. Set up cross-compilation toolchain for ARM64
+      - name: Set up cross-compilation toolchain for ARM64
         run: |
           sudo apt install -y gcc-aarch64-linux-gnu
 
+      # 9. Configure the kernel with gki_defconfig
       - name: Configure the kernel with gki_defconfig
         run: |
           chmod -R 777 MiLinuxKernel_4
           cd MiLinuxKernel_4
           ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make gki_defconfig
 
+      # 10. Build the kernel
       - name: Build the kernel
         run: |
           cd MiLinuxKernel_4
           ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make -j$(nproc)
 
+      # 11. Upload kernel build artifacts
       - name: Upload kernel build artifacts
         uses: actions/upload-artifact@v3
         with:
           name: redmi-k60pro-gki-kernel
-          path: MiLinuxKernel_4/arch/arm64/boot/Image*
-
+          path: |
+            MiLinuxKernel_4/arch/arm64/boot/Image
+            MiLinuxKernel_4/arch/arm64/boot/Image.gz
+            MiLinuxKernel_4/arch/arm64/boot/Image.lz4
+            MiLinuxKernel_4/arch/arm64/boot/dts/*.dtb
+            MiLinuxKernel_4/arch/arm64/boot/dts/*.dtbo

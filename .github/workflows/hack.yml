@@ -57,10 +57,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}  # 使用 Secret 中存储的 Token
 
-      - name: Add execute permissions to necessary scripts
-        run: |
-          chmod +x ./scripts/pahole-flags.sh
-          chmod +x ./scripts/cc-version.sh
+          
 
       - name: Set up cross-compilation toolchain for arm64
         run: |
@@ -68,6 +65,7 @@ jobs:
 
       - name: Configure the kernel with gki_defconfig
         run: |
+          chmod -R 777 MiLinuxKernel_4
           cd MiLinuxKernel_4
           ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make gki_defconfig
 

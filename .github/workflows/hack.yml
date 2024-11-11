@@ -1,4 +1,4 @@
-name: Build MiLinuxKernel_4 GKI Kernel
+name: Build Redmi K60 Pro GKI Kernel
 
 on:
   push:
@@ -44,30 +44,29 @@ jobs:
             make \
             libudev-dev \
             libpci-dev \
-            dwarves
+            dwarves  # pahole 工具
 
-      - name: Download MiLinuxKernel_4 source
+      - name: Download specific Clang version (r450784e)
         run: |
-          git clone https://github.com/3582730951/MiLinuxKernel_4.git
+          git clone https://github.com/snove520/clang-r450784e.git
+          chmod 777 -R $PWD/clang-r450784e
+          export PATH="$PWD/clang-r450784e/bin:$PATH"
+
+      - name: Download MiLinuxKernel source
+        run: |
+          git clone --depth=1 -b MiEngine_1 https://github.com/3582730951/MiLinuxKernel_4.git
           cd MiLinuxKernel_4
-          git checkout MiEngine_1
-
-      - name: Download Google clang r450784e
-        run: |
-          wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/master/clang-r450784e.tar.gz -O clang-r450784e.tar.gz
-          mkdir -p /opt/clang-r450784e
-          tar -xvf clang-r450784e.tar.gz -C /opt/clang-r450784e
-          export PATH=/opt/clang-r450784e/bin:$PATH
 
       - name: Configure the kernel with migki_defconfig
         run: |
+          chmod 777 -R MiLinuxKernel_4
           cd MiLinuxKernel_4
           ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make migki_defconfig
 
       - name: Build the kernel
         run: |
           cd MiLinuxKernel_4
-          ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang LD=ld.lld make -j$(nproc)
+          ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make -j$(nproc)
 
       - name: Upload kernel build artifacts
         uses: actions/upload-artifact@v3

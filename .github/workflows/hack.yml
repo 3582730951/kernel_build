@@ -57,6 +57,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}  # 使用 Secret 中存储的 Token
 
+      - name: Add execute permissions to necessary scripts
+        run: |
+          chmod +x ./scripts/pahole-flags.sh
+          chmod +x ./scripts/cc-version.sh
+
       - name: Set up cross-compilation toolchain for arm64
         run: |
           sudo apt install -y gcc-aarch64-linux-gnu

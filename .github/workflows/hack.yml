@@ -54,7 +54,8 @@ jobs:
 
       - name: Download Google clang r450784e
         run: |
-          wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 -O clang-r450784e.tar.gz
+          wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/master/clang-r450784e.tar.gz -O clang-r450784e.tar.gz
+          mkdir -p /opt/clang-r450784e
           tar -xvf clang-r450784e.tar.gz -C /opt/clang-r450784e
           export PATH=/opt/clang-r450784e/bin:$PATH
 

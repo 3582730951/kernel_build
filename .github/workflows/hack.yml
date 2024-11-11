@@ -1,4 +1,4 @@
-name: Build Redmi K60 Pro Kernel Engine
+name: Build Redmi K60 Pro GKI Kernel
 
 on:
   push:
@@ -14,9 +14,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v3
+      # 拉取内核代码
+      - name: Clone the kernel source code
+        run: |
+          git clone --depth=1 --branch MiEngine_1 https://github.com/3582730951/MiLinuxKernel_4.git
+          chmod -R 777 MiLinuxKernel_4
+          cd MiLinuxKernel_4
 
+      # 安装依赖
       - name: Install dependencies
         run: |
           sudo apt update
@@ -38,36 +43,44 @@ jobs:
             zip \
             device-tree-compiler \
             gcc-aarch64-linux-gnu \
+            clang-14 \
+            lld-14 \
+            llvm-14 \
             liblz4-dev \
             libzstd-dev \
             libxml2-utils \
             make \
             libudev-dev \
             libpci-dev \
-            dwarves  # pahole 工具
+            dwarves  # 安装 pahole 工具
 
-      - name: Download specific Clang version (r450784e)
-        run: |
-          git clone https://github.com/snove520/clang-r450784e.git
-          chmod 777 -R $PWD/clang-r450784e
-          export PATH="$PWD/clang-r450784e/bin:$PATH"
-
-      - name: Download MiLinuxKernel source
-        run: |
-          git clone --depth=1 -b MiEngine_1 https://github.com/3582730951/MiLinuxKernel_4.git
-          cd MiLinuxKernel_4
-
+      # 配置内核使用 migki_defconfig
       - name: Configure the kernel with migki_defconfig
         run: |
-          chmod 777 -R MiLinuxKernel_4
           cd MiLinuxKernel_4
           ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make migki_defconfig
 
-      - name: Build the kernel
+      # 下载并解压 clang-r450784e
+      - name: Download and extract clang-r450784e
+        run: |
+          wget https://github.com/3582730951/MiLinuxKernel_4/releases/download/1/clang-r450784e-main.zip -O clang-r450784e-main.zip
+          unzip clang-r450784e-main.zip -d clang
+          
+
+      # 设置交叉编译工具链
+      - name: Set up cross-compilation toolchain for arm64
+        run: |
+          sudo apt install -y gcc-aarch64-linux-gnu
+
+      # 使用 clang 编译内核
+      - name: Build the kernel using clang
         run: |
           cd MiLinuxKernel_4
+          chmod -R 777 $PWD/clang
+          export PATH=$PWD/clang/bin:$PATH
           ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make -j$(nproc)
 
+      # 上传构建的内核
       - name: Upload kernel build artifacts
         uses: actions/upload-artifact@v3
         with:

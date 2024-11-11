@@ -78,4 +78,5 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: redmi-k60pro-gki-kernel
-          path: MiLinuxKernel_4/arch/arm64/boot/Image
+          path: MiLinuxKernel_4/arch/arm64/boot/Image*
+

@@ -65,6 +65,7 @@ jobs:
         run: |
           wget https://github.com/3582730951/MiLinuxKernel_4/releases/download/1/clang-r450784e-main.zip -O clang-r450784e-main.zip
           unzip clang-r450784e-main.zip -d clang
+          chmod 777 -R clang
           
 
       # 设置交叉编译工具链
@@ -76,7 +77,6 @@ jobs:
       - name: Build the kernel using clang
         run: |
           cd MiLinuxKernel_4
-          chmod -R 777 $PWD/clang
           export PATH=$PWD/clang/bin:$PATH
           ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make -j$(nproc)
 

@@ -1,4 +1,4 @@
-name: Build Redmi K60 Pro GKI Kernel
+name: Build Redmi K60 Pro Kernel Engine
 
 on:
   push:

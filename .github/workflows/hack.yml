@@ -51,9 +51,11 @@ jobs:
 
       - name: Clone MiLinuxKernel_4 repository
         run: |
-          git clone https://github.com/3582730951/MiLinuxKernel_4.git
+          git clone https://$GH_TOKEN@github.com/3582730951/MiLinuxKernel_4.git
           cd MiLinuxKernel_4
           git checkout HackKernel_1
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}  # 使用 Secret 中存储的 Token
 
       - name: Set up cross-compilation toolchain for arm64
         run: |

@@ -1,0 +1,76 @@
+name: Build Redmi K60 Pro Mi Engine Kernel
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:  # 手动触发选项
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            build-essential \
+            bc \
+            bison \
+            flex \
+            libssl-dev \
+            libncurses5-dev \
+            curl \
+            libelf-dev \
+            ccache \
+            git-core \
+            gnupg2 \
+            wget \
+            python3 \
+            rsync \
+            zip \
+            device-tree-compiler \
+            gcc-aarch64-linux-gnu \
+            clang-14 \
+            lld-14 \
+            llvm-14 \
+            liblz4-dev \
+            libzstd-dev \
+            libxml2-utils \
+            make \
+            libudev-dev \
+            libpci-dev \
+            dwarves  # 安装 pahole 工具
+
+      - name: Clone MiLinuxKernel_4 repository
+        run: |
+          git clone https://github.com/3582730951/MiLinuxKernel_4.git
+          cd MiLinuxKernel_4
+          git checkout HackKernel_1
+
+      - name: Set up cross-compilation toolchain for arm64
+        run: |
+          sudo apt install -y gcc-aarch64-linux-gnu
+
+      - name: Configure the kernel with gki_defconfig
+        run: |
+          cd MiLinuxKernel_4
+          ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make gki_defconfig
+
+      - name: Build the kernel
+        run: |
+          cd MiLinuxKernel_4
+          ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make -j$(nproc)
+
+      - name: Upload kernel build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: redmi-k60pro-gki-kernel
+          path: MiLinuxKernel_4/arch/arm64/boot/Image

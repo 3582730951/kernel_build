@@ -53,7 +53,7 @@ jobs:
         run: |
           git clone https://$GH_TOKEN@github.com/3582730951/MiLinuxKernel_4.git
           cd MiLinuxKernel_4
-          git checkout HackKernel_1
+          git checkout MiEngine_1
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}  # 使用 Secret 中存储的 Token
 
